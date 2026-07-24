@@ -5,24 +5,42 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Outfit", sans-serif;
   
-  --color-brand-gold: #65cbcf;        /* Muestra exacta: Turquesa suave claro */
-  --color-brand-gold-light: #a4e9eb;  /* Turquesa pastel iluminado */
-  --color-brand-gold-dark: #3aa6aa;   /* Turquesa medio */
-  --color-brand-navy: #092025;        /* Fondo turquesa oscuro elegante */
-  --color-brand-navy-light: #10333b;  /* Tarjetas turquesa suave */
+  --color-brand-gold: #65cbcf;        /* Muestra turquesa suave */
+  --color-brand-gold-light: #b0f0f3;  /* Turquesa brillo pastel */
+  --color-brand-gold-dark: #379da1;   /* Turquesa elegante profundo */
+  --color-brand-navy: #07191d;        /* Fondo oscuro ejecutivo */
+  --color-brand-navy-light: #0d2830;  /* Superficie de tarjeta ultra-pulida */
 }
 
 body {
-  background-color: #092025;
+  background-color: #07191d;
   color: #f8fafc;
   font-family: var(--font-sans);
-  /* Fondo ambiental turquesa pastel idéntico a tu muestra */
-  background-image: radial-gradient(at 20% 80%, rgba(101, 203, 207, 0.35) 0px, transparent 50%),
-                    radial-gradient(at 80% 20%, rgba(16, 51, 59, 0.85) 0px, transparent 50%);
+  /* Degradado ambiental sofisticado y limpio */
+  background-image: 
+    radial-gradient(at 15% 15%, rgba(101, 203, 207, 0.22) 0px, transparent 45%),
+    radial-gradient(at 85% 85%, rgba(55, 157, 161, 0.18) 0px, transparent 55%),
+    radial-gradient(at 50% 50%, rgba(7, 25, 29, 0.95) 0px, transparent 100%);
   background-attachment: fixed;
   background-size: cover;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
+}
+
+/* Scrollbar personalizada profesional */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #07191d;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(101, 203, 207, 0.3);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(101, 203, 207, 0.6);
 }
