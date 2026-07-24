@@ -1,0 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", sans-serif;
+  
+  --color-brand-gold: #65cbcf;        /* Muestra exacta: Turquesa suave claro */
+  --color-brand-gold-light: #a4e9eb;  /* Turquesa pastel iluminado */
+  --color-brand-gold-dark: #3aa6aa;   /* Turquesa medio */
+  --color-brand-navy: #092025;        /* Fondo turquesa oscuro elegante */
+  --color-brand-navy-light: #10333b;  /* Tarjetas turquesa suave */
+}
+
+body {
+  background-color: #092025;
+  color: #f8fafc;
+  font-family: var(--font-sans);
+  /* Fondo ambiental turquesa pastel idéntico a tu muestra */
+  background-image: radial-gradient(at 20% 80%, rgba(101, 203, 207, 0.35) 0px, transparent 50%),
+                    radial-gradient(at 80% 20%, rgba(16, 51, 59, 0.85) 0px, transparent 50%);
+  background-attachment: fixed;
+  background-size: cover;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+}
