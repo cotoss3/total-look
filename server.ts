@@ -80,6 +80,32 @@ async function startServer() {
     }
   }
 
+  function parseBase64Image(base64Image: unknown) {
+    if (typeof base64Image !== 'string' || !base64Image.trim()) {
+      throw new Error("Falta la imagen");
+    }
+
+    const image = base64Image.trim();
+    const dataUrlMatch = image.match(
+      /^data:(image\/[a-zA-Z0-9.+-]+);base64,([\s\S]+)$/,
+    );
+    const mimeType = dataUrlMatch?.[1] ?? 'image/jpeg';
+    const data = (dataUrlMatch?.[2] ?? image).replace(/\s/g, '');
+
+    if (
+      data.length < 100 ||
+      data.length % 4 !== 0 ||
+      !/^[A-Za-z0-9+/]+={0,2}$/.test(data) ||
+      Buffer.from(data, 'base64').byteLength < 64
+    ) {
+      throw new Error(
+        "La foto llegó vacía. Espera a que la cámara esté lista e intenta de nuevo.",
+      );
+    }
+
+    return { data, mimeType };
+  }
+
   // API endpoints FIRST
   app.post("/api/gemini/extract-upc", async (req, res) => {
     try {
@@ -94,7 +120,7 @@ async function startServer() {
       }
 
       const model = 'gemini-3.5-flash';
-      const cleanBase64 = base64Image.split(',')[1] || base64Image;
+      const image = parseBase64Image(base64Image);
 
       const result = await executeWithRetry(async () => {
         const client = getGeminiClient();
@@ -104,8 +130,8 @@ async function startServer() {
             parts: [
               {
                 inlineData: {
-                  mimeType: 'image/jpeg',
-                  data: cleanBase64,
+                  mimeType: image.mimeType,
+                  data: image.data,
                 },
               },
               {
@@ -142,7 +168,7 @@ async function startServer() {
       }
 
       const model = 'gemini-2.5-flash-image';
-      const cleanBase64 = base64Image.split(',')[1] || base64Image;
+      const image = parseBase64Image(base64Image);
 
       const resultUrl = await executeWithRetry(async () => {
         const client = getGeminiClient();
@@ -152,8 +178,8 @@ async function startServer() {
             parts: [
               {
                 inlineData: {
-                  mimeType: 'image/jpeg',
-                  data: cleanBase64,
+                  mimeType: image.mimeType,
+                  data: image.data,
                 },
               },
               {

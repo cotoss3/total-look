@@ -75,15 +75,37 @@ export function jsonError(error: unknown): Response {
   return Response.json({ error: message }, { status: 500 });
 }
 
-export async function readBase64Image(request: Request): Promise<string> {
+interface Base64Image {
+  data: string;
+  mimeType: string;
+}
+
+export async function readBase64Image(request: Request): Promise<Base64Image> {
   const body = (await request.json()) as { base64Image?: unknown };
 
   if (typeof body.base64Image !== 'string' || !body.base64Image.trim()) {
     throw new InvalidRequestError('Falta la imagen');
   }
 
-  return body.base64Image;
+  const image = body.base64Image.trim();
+  const dataUrlMatch = image.match(
+    /^data:(image\/[a-zA-Z0-9.+-]+);base64,([\s\S]+)$/,
+  );
+  const mimeType = dataUrlMatch?.[1] ?? 'image/jpeg';
+  const data = (dataUrlMatch?.[2] ?? image).replace(/\s/g, '');
+
+  if (
+    data.length < 100 ||
+    data.length % 4 !== 0 ||
+    !/^[A-Za-z0-9+/]+={0,2}$/.test(data) ||
+    Buffer.from(data, 'base64').byteLength < 64
+  ) {
+    throw new InvalidRequestError(
+      'La foto llegó vacía. Espera a que la cámara esté lista e intenta de nuevo.',
+    );
+  }
+
+  return { data, mimeType };
 }
 
 export class InvalidRequestError extends Error {}
-

@@ -9,14 +9,17 @@ interface CameraProps {
 const Camera: React.FC<CameraProps> = ({ onCapture, label }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const startCamera = useCallback(async () => {
     try {
       setError(null);
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+      setIsReady(false);
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
       }
       const newStream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
@@ -26,36 +29,66 @@ const Camera: React.FC<CameraProps> = ({ onCapture, label }) => {
         },
         audio: false 
       });
+      streamRef.current = newStream;
       setStream(newStream);
       if (videoRef.current) {
         videoRef.current.srcObject = newStream;
+        void videoRef.current.play().catch(() => {
+          // Safari may defer playback until metadata is available.
+        });
       }
     } catch (err: any) {
       console.error("Error accessing camera:", err);
       setError("Permiso denegado o cámara no disponible. Por favor, asegúrate de otorgar permisos de cámara.");
     }
-  }, [stream]);
+  }, []);
 
   useEffect(() => {
     startCamera();
     return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [startCamera]);
+
+  const markCameraReady = () => {
+    const video = videoRef.current;
+    setIsReady(
+      !!video &&
+      video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA &&
+      video.videoWidth > 0 &&
+      video.videoHeight > 0,
+    );
+  };
 
   const capturePhoto = () => {
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
+
+      if (
+        !isReady ||
+        video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA ||
+        video.videoWidth <= 0 ||
+        video.videoHeight <= 0
+      ) {
+        setError("La cámara aún se está preparando. Espera un momento e intenta de nuevo.");
+        return;
+      }
+
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+        if (!dataUrl.startsWith('data:image/jpeg;base64,') || dataUrl.length < 100) {
+          setError("No se pudo capturar la foto. Presiona Reintentar cámara y vuelve a tomarla.");
+          return;
+        }
+
         onCapture(dataUrl);
       }
     }
@@ -88,6 +121,8 @@ const Camera: React.FC<CameraProps> = ({ onCapture, label }) => {
               autoPlay 
               playsInline 
               muted
+              onLoadedMetadata={markCameraReady}
+              onCanPlay={markCameraReady}
               className="w-full h-full object-cover"
             />
             <div className="absolute top-4 left-4 right-4 text-center pointer-events-none flex justify-center">
@@ -104,7 +139,7 @@ const Camera: React.FC<CameraProps> = ({ onCapture, label }) => {
       <div className="mt-8 flex items-center justify-center gap-6 w-full">
         <button
           onClick={capturePhoto}
-          disabled={!!error || !stream}
+          disabled={!!error || !stream || !isReady}
           className="w-20 h-20 bg-brand-navy-light border-8 border-brand-gold/10 rounded-full flex items-center justify-center shadow-lg shadow-black/40 active:scale-95 transition-all disabled:opacity-30 disabled:pointer-events-none"
           title="Tomar Foto"
         >

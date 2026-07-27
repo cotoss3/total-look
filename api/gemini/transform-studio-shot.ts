@@ -16,8 +16,7 @@ export default {
     }
 
     try {
-      const base64Image = await readBase64Image(request);
-      const cleanBase64 = base64Image.split(',')[1] || base64Image;
+      const image = await readBase64Image(request);
 
       const studioImage = await executeWithRetry(async () => {
         const response = await getGeminiClient().models.generateContent({
@@ -26,8 +25,8 @@ export default {
             parts: [
               {
                 inlineData: {
-                  mimeType: 'image/jpeg',
-                  data: cleanBase64,
+                  mimeType: image.mimeType,
+                  data: image.data,
                 },
               },
               {
