@@ -2,10 +2,20 @@
  * Service to handle real Google Drive uploads and User profile.
  * Retains session token in memory and sessionStorage so login popup is only shown ONCE per session.
  */
+const DRIVE_OAUTH_SCOPE = 'https://www.googleapis.com/auth/drive';
+
 export class DriveService {
   private readonly FOLDER_ID = (import.meta.env && import.meta.env.VITE_GOOGLE_DRIVE_FOLDER_ID) || '1s45XARq_hD21G0OZLyMwrjNQzgeDfn6I';
   private accessToken: string | null = sessionStorage.getItem('google_drive_token');
   private tokenExpiresAt: number = parseInt(sessionStorage.getItem('google_drive_token_expires') || '0', 10);
+
+  constructor() {
+    // A token issued with drive.file cannot write inside a pre-existing
+    // shared folder. Discard stale tokens so Google requests the new scope.
+    if (sessionStorage.getItem('google_drive_token_scope') !== DRIVE_OAUTH_SCOPE) {
+      this.logout();
+    }
+  }
 
   /**
    * Requests an access token from Google or reuses active retained token.
@@ -26,7 +36,7 @@ export class DriveService {
 
         const client = window.google.accounts.oauth2.initTokenClient({
           client_id: clientId,
-          scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+          scope: `${DRIVE_OAUTH_SCOPE} https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email`,
           callback: (response: any) => {
             if (response.error) {
               reject(new Error(response.error_description || "Error de autenticación"));
@@ -42,6 +52,7 @@ export class DriveService {
 
             sessionStorage.setItem('google_drive_token', token);
             sessionStorage.setItem('google_drive_token_expires', expiresAt.toString());
+            sessionStorage.setItem('google_drive_token_scope', DRIVE_OAUTH_SCOPE);
 
             resolve(token);
           },
@@ -114,6 +125,10 @@ export class DriveService {
           this.logout();
           throw new Error("Sesión de Google expirada. Por favor, vuelve a hacer clic en Subir para renovar la sesión.");
         }
+        if (response.status === 403 || response.status === 404) {
+          this.logout();
+          throw new Error("Google Drive no concedió permiso para crear archivos en la carpeta destino. Autoriza nuevamente el acceso completo a Drive.");
+        }
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error?.message || `Error al crear la carpeta ${candidateName} en Drive`);
       }
@@ -168,6 +183,10 @@ export class DriveService {
           this.logout();
           throw new Error("Sesión expirada. Por favor, intenta de nuevo.");
         }
+        if (response.status === 403 || response.status === 404) {
+          this.logout();
+          throw new Error("Google Drive no concedió permiso para guardar en la carpeta destino. Autoriza nuevamente el acceso completo a Drive.");
+        }
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error?.message || 'Error al subir a Drive');
       }
@@ -209,6 +228,7 @@ export class DriveService {
     this.tokenExpiresAt = 0;
     sessionStorage.removeItem('google_drive_token');
     sessionStorage.removeItem('google_drive_token_expires');
+    sessionStorage.removeItem('google_drive_token_scope');
   }
 }
 
