@@ -4,7 +4,7 @@ import {
   InvalidRequestError,
   jsonError,
   readBase64Image,
-} from './_shared';
+} from './_shared.js';
 
 export default {
   async fetch(request: Request): Promise<Response> {
@@ -68,4 +68,3 @@ export default {
     }
   },
 };
-
