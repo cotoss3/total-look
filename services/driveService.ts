@@ -198,7 +198,8 @@ export class DriveService {
   }
 
   /**
-   * Uploads a batch of items into a BRAND NEW UNIQUE Look folder.
+   * Uploads a batch directly into the configured Total_Look folder.
+   * Each filename contains the UPC, Look code, and item index.
    */
   async uploadBatch(
     folderName: string,
@@ -206,12 +207,11 @@ export class DriveService {
     token: string,
     onProgress?: (current: number, total: number, folderName: string) => void
   ): Promise<{ folderId: string; finalFolderName: string }> {
-    // 1. Create a GUARANTEED UNIQUE subfolder (e.g. Look 0001 or Look 0001.1 if Look 0001 exists)
-    const { folderId, finalFolderName } = await this.createUniqueFolder(folderName, token);
-
+    const folderId = this.FOLDER_ID;
+    const finalFolderName = folderName.trim();
     const lookSlug = finalFolderName.replace(/\s+/g, '_');
 
-    // 2. Upload items sequentially to THIS unique folder only
+    // Upload every coded file directly to the configured parent folder.
     for (let i = 0; i < items.length; i++) {
       if (onProgress) {
         onProgress(i + 1, items.length, finalFolderName);

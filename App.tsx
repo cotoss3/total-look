@@ -222,7 +222,7 @@ const App: React.FC = () => {
       ...prev, 
       isProcessing: true, 
       error: null,
-      processingMessage: `CREANDO CARPETA ÚNICA PARA "${state.lookNumber.toUpperCase()}" EN DRIVE...` 
+      processingMessage: `PREPARANDO ARCHIVOS DE "${state.lookNumber.toUpperCase()}" PARA DRIVE...`
     }));
 
     try {
@@ -537,7 +537,7 @@ const App: React.FC = () => {
                   <div className="w-16 h-16 bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-xl border-4 border-brand-navy"><CheckCircle size={32} /></div>
                   <div>
                     <h4 className="font-black text-emerald-300 text-xl uppercase tracking-tight font-display">¡{state.lookNumber} Subido con Éxito!</h4>
-                    <p className="text-slate-400 text-xs font-bold mt-1">Subcarpeta única creada y productos sincronizados en Google Drive.</p>
+                    <p className="text-slate-400 text-xs font-bold mt-1">Archivos codificados sincronizados directamente en la carpeta Total_Look.</p>
                   </div>
                   <button 
                     onClick={handleNextLook}
